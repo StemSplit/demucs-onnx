@@ -1,0 +1,347 @@
+# ============================================================================
+# publish.yml — canonical release path for demucs-onnx
+# ============================================================================
+#
+# Triggers a PyPI publish when a SemVer tag `v*.*.*` is pushed (e.g. `v0.3.4`).
+# Also exposes a `workflow_dispatch` "dry-run" path that exercises the entire
+# flow against TestPyPI without cutting a real release. The dry-run input
+# defaults to `true` so accidental manual runs cannot ship a real version.
+#
+# Gates, in order (each `needs:` the previous):
+#   verify         multi-Python lint + version-agreement check (matrix)
+#   parity-smoke   1-second sine clip → htdemucs CPU separate → 4 stems exist
+#   build          uv build → sdist + wheel uploaded as an artifact
+#   publish-pypi   PyPI Trusted Publishing (OIDC, no API tokens)
+#   publish-testpypi  TestPyPI publish (workflow_dispatch + dry_run path only)
+#   attest         sigstore build-provenance attestation on dist/*
+#   github-release softprops/action-gh-release with auto-generated notes
+#
+# ----------------------------------------------------------------------------
+# One-time maintainer setup before the first tag push will publish:
+# ----------------------------------------------------------------------------
+#   1. PyPI — configure Trusted Publishing at
+#      https://pypi.org/manage/account/publishing/
+#        Owner:        StemSplit
+#        Repository:   demucs-onnx
+#        Workflow:     publish.yml
+#        Environment:  pypi
+#      Repeat at https://test.pypi.org/manage/account/publishing/ with
+#      Environment: testpypi (for the dry-run path).
+#
+#   2. GitHub — under repo Settings → Environments, create two environments
+#      named exactly `pypi` and `testpypi`. Recommended protection rules:
+#        - `pypi`: require manual approval from at least one maintainer.
+#        - `testpypi`: no approval required (dry-runs should stay friction-free).
+#
+#   No GitHub Actions secrets are needed for PyPI itself — OIDC handles auth.
+#
+# ----------------------------------------------------------------------------
+# Action-pin policy:
+# ----------------------------------------------------------------------------
+#   - First-party (`actions/*`, `pypa/*`): floating major tag (e.g. `@v4`).
+#   - Third-party: pinned to a full commit SHA with the human version as a
+#     trailing comment (Dependabot / Renovate can still upgrade these).
+#
+# ----------------------------------------------------------------------------
+# Emergency manual fallback:
+# ----------------------------------------------------------------------------
+#   If CI is down, `tools/publish.py` is documented in PUBLISH.md as the
+#   guardrailed manual path. It does NOT publish to PyPI itself — it only
+#   pushes the public-repo subtree. PyPI is then a manual `uv publish` from
+#   the maintainer's machine, behind the same `.env.local` token the project
+#   has always used. This path should be considered a break-glass escape.
+# ============================================================================
+
+name: publish
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry-run via TestPyPI (no real PyPI release)"
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # --------------------------------------------------------------------------
+  # 1. verify — multi-version lint + version-agreement gate
+  # --------------------------------------------------------------------------
+  verify:
+    name: verify (py${{ matrix.python }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up uv + Python ${{ matrix.python }}
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+
+      - name: Sync (with dev extras for ruff)
+        run: uv sync --extra dev
+
+      - name: Ruff lint
+        run: uv run ruff check src/
+
+      - name: Verify __version__ / pyproject.toml / git-tag agreement
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG_VERSION="$(uv run python -c 'import demucs_onnx; print(demucs_onnx.__version__)')"
+          PYPROJECT_VERSION="$(grep -m1 '^version = ' pyproject.toml | sed -E 's/.*"(.*)".*/\1/')"
+          echo "demucs_onnx.__version__ = $PKG_VERSION"
+          echo "pyproject.toml version  = $PYPROJECT_VERSION"
+          if [ "$PKG_VERSION" != "$PYPROJECT_VERSION" ]; then
+            echo "::error::__version__ ($PKG_VERSION) != pyproject.toml ($PYPROJECT_VERSION)"
+            exit 1
+          fi
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            echo "git tag                 = $GITHUB_REF_NAME  (stripped: $TAG_VERSION)"
+            if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+              echo "::error::git tag ($TAG_VERSION) != __version__ ($PKG_VERSION)"
+              exit 1
+            fi
+          fi
+
+      - name: CLI smoke (--version matches package)
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG_VERSION="$(uv run python -c 'import demucs_onnx; print(demucs_onnx.__version__)')"
+          CLI_OUT="$(uv run demucs-onnx --version)"
+          EXPECTED="demucs-onnx $PKG_VERSION"
+          echo "CLI --version: $CLI_OUT"
+          if [ "$CLI_OUT" != "$EXPECTED" ]; then
+            echo "::error::CLI --version output ('$CLI_OUT') != expected ('$EXPECTED')"
+            exit 1
+          fi
+
+  # --------------------------------------------------------------------------
+  # 2. parity-smoke — separate a 1-second sine clip on CPU, expect 4 stems
+  # --------------------------------------------------------------------------
+  # Smallest viable input we can manufacture in CI; the goal is "does the
+  # graph actually run end-to-end on a clean runner?", not numerical parity
+  # (the export parity check lives in the export job + tests/ in a future
+  # PR). Uses the htdemucs single-file 4-stem flavor with --small
+  # (fp16weights, ~75 MB) for the fastest download.
+  parity-smoke:
+    name: parity smoke (1s sine, htdemucs CPU)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up uv + Python 3.12
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Sync runtime deps
+        run: uv sync
+
+      - name: Generate 1-second mono sine .wav
+        run: |
+          uv run python -c "
+          import numpy as np, soundfile as sf
+          sr = 44100
+          t = np.arange(sr, dtype='float32') / sr
+          audio = (0.2 * np.sin(2 * np.pi * 440.0 * t)).astype('float32')
+          sf.write('/tmp/sine.wav', audio, sr, subtype='FLOAT')
+          print('wrote /tmp/sine.wav', audio.shape, audio.dtype, sr)
+          "
+
+      - name: Run separation (htdemucs, CPU, fp16weights)
+        run: |
+          uv run demucs-onnx separate \
+            /tmp/sine.wav /tmp/out \
+            --model htdemucs \
+            --providers cpu \
+            --small \
+            --quiet
+
+      - name: Assert 4 non-empty stem .wav files exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -la /tmp/out
+          count="$(find /tmp/out -name '*.wav' -size +0c -type f | wc -l | tr -d ' ')"
+          echo "non-empty .wav count: $count"
+          if [ "$count" -lt 4 ]; then
+            echo "::error::expected at least 4 non-empty stem .wav files; got $count"
+            exit 1
+          fi
+
+  # --------------------------------------------------------------------------
+  # 3. build — sdist + wheel via hatchling (driven by `uv build`)
+  # --------------------------------------------------------------------------
+  build:
+    name: build sdist + wheel
+    needs: parity-smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up uv + Python 3.12
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: List artifacts
+        run: ls -la dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  # --------------------------------------------------------------------------
+  # 4a. publish-testpypi — dry-run path (workflow_dispatch + dry_run=true)
+  # --------------------------------------------------------------------------
+  publish-testpypi:
+    name: publish to TestPyPI (dry-run)
+    needs: build
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/demucs-onnx/
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI via OIDC
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+          print-hash: true
+
+  # --------------------------------------------------------------------------
+  # 4b. publish-pypi — real release (tag push OR explicit dispatch w/ dry_run=false)
+  # --------------------------------------------------------------------------
+  publish-pypi:
+    name: publish to PyPI
+    needs: build
+    if: >-
+      ${{
+        (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+        || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)
+      }}
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/demucs-onnx/
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI via OIDC (Trusted Publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print-hash: true
+
+  # --------------------------------------------------------------------------
+  # 5. attest — sigstore build-provenance over the published artifacts
+  # --------------------------------------------------------------------------
+  # Runs after whichever publish path fired. Generates a verifiable
+  # attestation that the dist/* artifacts were built by this exact workflow
+  # commit. Consumers can verify with:
+  #   gh attestation verify dist/demucs_onnx-X.Y.Z-py3-none-any.whl \
+  #     --owner StemSplit
+  attest:
+    name: sigstore attest
+    needs: [publish-testpypi, publish-pypi]
+    if: >-
+      ${{
+        always()
+        && (needs.publish-pypi.result == 'success'
+            || needs.publish-testpypi.result == 'success')
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/*
+
+  # --------------------------------------------------------------------------
+  # 6. github-release — only for real tag-push publishes (never on dry-run)
+  # --------------------------------------------------------------------------
+  github-release:
+    name: GitHub release
+    needs: [attest, publish-pypi]
+    if: >-
+      ${{
+        github.event_name == 'push'
+        && startsWith(github.ref, 'refs/tags/v')
+        && needs.publish-pypi.result == 'success'
+        && needs.attest.result == 'success'
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          generate_release_notes: true
+          files: dist/*
+          fail_on_unmatched_files: true

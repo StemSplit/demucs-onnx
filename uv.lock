@@ -181,7 +181,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/87/38/55f835ebd9f443465
 
 [[package]]
 name = "demucs-onnx"
-version = "0.3.2"
+version = "0.3.3"
 source = { editable = "." }
 dependencies = [
     { name = "huggingface-hub" },
