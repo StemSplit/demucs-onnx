@@ -4,7 +4,7 @@ version = "0.3.3"
 description = "Run and export HT-Demucs / Demucs music source separation as ONNX. Pure numpy + onnxruntime inference (no PyTorch). Supports htdemucs_ft (4-stem bag), htdemucs (single-file 4-stem), and htdemucs_6s (6-stem with guitar + piano). Karaoke / acapella CLI, browser-demo scaffolder, auto-resampling, auto execution provider routing, fp16-weight downloads, MP3 output. Fixes the 4 blockers that prevent vanilla torch.onnx.export from working on htdemucs."
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [
     { name = "StemSplit", email = "team@stemsplit.io" },
 ]
@@ -64,7 +64,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -159,7 +158,7 @@ include = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 src = ["src"]
 
 [tool.ruff.lint]
