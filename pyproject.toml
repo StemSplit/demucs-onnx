@@ -1,6 +1,6 @@
 [project]
 name = "demucs-onnx"
-version = "0.3.3"
+version = "0.3.4"
 description = "Run and export HT-Demucs / Demucs music source separation as ONNX. Pure numpy + onnxruntime inference (no PyTorch). Supports htdemucs_ft (4-stem bag), htdemucs (single-file 4-stem), and htdemucs_6s (6-stem with guitar + piano). Karaoke / acapella CLI, browser-demo scaffolder, auto-resampling, auto execution provider routing, fp16-weight downloads, MP3 output. Fixes the 4 blockers that prevent vanilla torch.onnx.export from working on htdemucs."
 readme = "README.md"
 license = { text = "MIT" }

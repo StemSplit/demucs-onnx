@@ -4,6 +4,50 @@ All notable changes to `demucs-onnx` are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.4] - 2026-05-22 — CI release pipeline, drop Python 3.10
+
+### Added
+
+- **Tag-triggered PyPI publish workflow** (`.github/workflows/publish.yml`)
+  using PyPI Trusted Publishing (OIDC, no long-lived API tokens), a
+  multi-Python verify matrix, a parity smoke gate that separates a
+  1-second sine clip on CPU end-to-end, and a sigstore build-provenance
+  attestation on every wheel and sdist. A `workflow_dispatch` dry-run
+  path against TestPyPI exists for validating release plumbing without
+  cutting a tag.
+
+### Changed
+
+- **Dropped Python 3.10 support.** `onnxruntime` 1.24+ no longer ships
+  `cp310` wheels, which broke `uv sync` on the verify matrix. Minimum
+  supported Python is now 3.11. The 3.10 trove classifier is gone and
+  `tool.ruff.target-version` is `py311`.
+- **Bumped GitHub Actions off the deprecated Node 20 runtime.**
+  `actions/checkout` → `@v6`, `actions/upload-artifact` → `@v7`,
+  `actions/download-artifact` → `@v8`, `actions/attest-build-provenance`
+  → `@v4`, `actions/setup-python` → `@v6`, `actions/upload-pages-artifact`
+  → `@v5`, `actions/deploy-pages` → `@v5`. Third-party pins refreshed:
+  `astral-sh/setup-uv` → `@v8.1.0` (SHA-pinned),
+  `softprops/action-gh-release` → `@v3.0.0` (SHA-pinned).
+- **`fail-fast: false`** on the verify matrix so a single bad Python
+  leg no longer chain-cancels the others.
+
+### Fixed
+
+- **`__version__` matches the published wheel version.** v0.3.3 shipped
+  a wheel whose `demucs_onnx.__version__` still read `"0.3.2"`; the new
+  workflow's verify gate cross-checks `__version__`, `pyproject.toml`,
+  and the pushed git tag on every run, so this can't drift again.
+
+### Docs
+
+- **Corrected README attribution and HF model-repo count** (7 ONNX
+  repos, not 9) across `docs/index.md`, `docs/models.md`, and
+  `docs/comparison.md`.
+- **Rewrote `PUBLISH.md`** to match the new CI release flow — TL;DR
+  bump + tag + push; the workflow does the rest. The pre-existing
+  `tools/publish.py` is documented as break-glass-only.
+
 ## [0.3.3] - 2026-05-21 — Cross-link the official Python SDK
 
 Documentation- and metadata-only patch release. **No runtime changes** —
@@ -266,6 +310,7 @@ Initial release.
 - CLI: `demucs-onnx separate`, `demucs-onnx export`,
   `demucs-onnx list-models`.
 
+[0.3.4]: https://github.com/StemSplit/demucs-onnx/releases/tag/v0.3.4
 [0.3.3]: https://github.com/StemSplit/demucs-onnx/releases/tag/v0.3.3
 [0.3.2]: https://github.com/StemSplit/demucs-onnx/releases/tag/v0.3.2
 [0.3.1]: https://github.com/StemSplit/demucs-onnx/releases/tag/v0.3.1
