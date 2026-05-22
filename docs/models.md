@@ -1,6 +1,6 @@
 # Models
 
-`demucs-onnx` v0.3.0 publishes 9 ONNX repos under the
+`demucs-onnx` v0.3.0 publishes 7 ONNX repos under the
 [StemSplitio](https://huggingface.co/StemSplitio) Hugging Face org. All
 auto-download on first use; nothing else is required.
 

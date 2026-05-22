@@ -49,7 +49,7 @@ cd /tmp/browser_demo && python -m http.server 8080
 - :material-web: **`onnxruntime-web` recipes** for Vite, Webpack, esbuild,
   Next.js, and Rollup, plus a zero-build vanilla HTML demo and a
   React + Vite demo emitted by `demucs-onnx browser-demo`.
-- :material-cloud-download: **9 ONNX model repos** on Hugging Face,
+- :material-cloud-download: **7 ONNX model repos** on Hugging Face,
   auto-downloaded on first use.
 
 ## The 4 blockers

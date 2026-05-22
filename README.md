@@ -489,4 +489,4 @@ Please cite the original authors if you use the model in research:
 ```
 
 - Original PyTorch model: [`facebookresearch/demucs`](https://github.com/facebookresearch/demucs)
-- ONNX export, parity verification, packaging, and host inference by [StemSplit](https://stemsplit.io)
+- ONNX export, parity verification, packaging, and host inference by [StemSplit Online Vocal Remover](https://stemsplit.io)

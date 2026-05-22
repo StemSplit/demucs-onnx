@@ -7,7 +7,7 @@ what you're actually trying to do.
 
 | Project | Working `.onnx` artifact? | Working inference? | On PyPI? | Status |
 |---|---|---|---|---|
-| **`demucs-onnx`** *(this)* | ✅ all 4 blockers patched, parity-verified to 1.6 × 10⁻⁴ | ✅ pure numpy + ORT | ✅ PyPI + 9 HF model repos | Maintained. |
+| **`demucs-onnx`** *(this)* | ✅ all 4 blockers patched, parity-verified to 1.6 × 10⁻⁴ | ✅ pure numpy + ORT | ✅ PyPI + 7 HF model repos | Maintained. |
 | `facebookresearch/demucs` | ❌ none of the 4 blockers fixed | n/a | ✅ (PyTorch only) | Maintained. |
 | `lstm-mode/demucs-onnx` (GH fork) | ❌ stuck on STFT complex blocker | n/a | ❌ | Abandoned. |
 | Stack Overflow gists | ❌ each stuck on one of the 4 blockers | n/a | ❌ | n/a |
