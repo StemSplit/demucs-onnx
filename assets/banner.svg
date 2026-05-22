@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F172A"/>
+      <stop offset="50%" style="stop-color:#1E1B4B"/>
+      <stop offset="100%" style="stop-color:#0F172A"/>
+    </linearGradient>
+    <linearGradient id="onnxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A855F7"/>
+      <stop offset="100%" style="stop-color:#EC4899"/>
+    </linearGradient>
+    <linearGradient id="torchGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FB923C"/>
+      <stop offset="100%" style="stop-color:#EA580C"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E293B" stop-opacity="0.95"/>
+      <stop offset="100%" style="stop-color:#0F172A" stop-opacity="0.95"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)"/>
+
+  <!-- Subtle dot grid -->
+  <g opacity="0.08" fill="#94A3B8">
+    <circle cx="100" cy="100" r="1.5"/>
+    <circle cx="200" cy="100" r="1.5"/>
+    <circle cx="300" cy="100" r="1.5"/>
+    <circle cx="400" cy="100" r="1.5"/>
+    <circle cx="500" cy="100" r="1.5"/>
+    <circle cx="600" cy="100" r="1.5"/>
+    <circle cx="700" cy="100" r="1.5"/>
+    <circle cx="800" cy="100" r="1.5"/>
+    <circle cx="900" cy="100" r="1.5"/>
+    <circle cx="1000" cy="100" r="1.5"/>
+    <circle cx="1100" cy="100" r="1.5"/>
+    <circle cx="100" cy="200" r="1.5"/>
+    <circle cx="200" cy="200" r="1.5"/>
+    <circle cx="1000" cy="200" r="1.5"/>
+    <circle cx="1100" cy="200" r="1.5"/>
+    <circle cx="100" cy="500" r="1.5"/>
+    <circle cx="1100" cy="500" r="1.5"/>
+  </g>
+
+  <!-- Title -->
+  <text x="600" y="115" text-anchor="middle" fill="#F8FAFC"
+        font-family="system-ui, -apple-system, sans-serif"
+        font-size="58" font-weight="800" letter-spacing="-1">
+    HT-Demucs FT &#x2192; ONNX
+  </text>
+
+  <!-- Subtitle -->
+  <text x="600" y="158" text-anchor="middle" fill="#94A3B8"
+        font-family="system-ui, -apple-system, sans-serif"
+        font-size="22" font-weight="500">
+    The first working export for iOS, Android &amp; web
+  </text>
+
+  <!-- Pipeline diagram: PyTorch -> ONNX -> Platforms -->
+  <!-- PyTorch box -->
+  <g transform="translate(120, 240)">
+    <rect width="220" height="120" rx="14" fill="url(#cardGrad)" stroke="url(#torchGrad)" stroke-width="2.5"/>
+    <text x="110" y="48" text-anchor="middle" fill="#FB923C"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="20" font-weight="700">PyTorch</text>
+    <text x="110" y="78" text-anchor="middle" fill="#E2E8F0"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="14">htdemucs_ft .th</text>
+    <text x="110" y="100" text-anchor="middle" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="12">640 MB &#x2022; GPU-bound</text>
+  </g>
+
+  <!-- Arrow 1 -->
+  <g transform="translate(360, 290)">
+    <text x="0" y="14" fill="#A855F7"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13" font-weight="600">4 blockers</text>
+    <text x="0" y="34" fill="#A855F7"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13" font-weight="600">defeated</text>
+    <path d="M 0 60 L 110 60 M 100 50 L 110 60 L 100 70" stroke="#A855F7" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- ONNX box -->
+  <g transform="translate(490, 240)">
+    <rect width="220" height="120" rx="14" fill="url(#cardGrad)" stroke="url(#onnxGrad)" stroke-width="2.5" filter="url(#glow)"/>
+    <text x="110" y="48" text-anchor="middle" fill="#EC4899"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="20" font-weight="700">ONNX</text>
+    <text x="110" y="78" text-anchor="middle" fill="#E2E8F0"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="14">.onnx &#x2022; opset 17</text>
+    <text x="110" y="100" text-anchor="middle" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="12">parity 1.6&#x00D7;10&#x207B;&#x2074;</text>
+  </g>
+
+  <!-- Arrow 2 -->
+  <g transform="translate(730, 290)">
+    <text x="0" y="14" fill="#10B981"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13" font-weight="600">runs anywhere</text>
+    <text x="0" y="34" fill="#10B981"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13" font-weight="600">1.31&#x00D7; faster CPU</text>
+    <path d="M 0 60 L 110 60 M 100 50 L 110 60 L 100 70" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Platforms box -->
+  <g transform="translate(860, 240)">
+    <rect width="220" height="120" rx="14" fill="url(#cardGrad)" stroke="#10B981" stroke-width="2.5"/>
+    <text x="110" y="42" text-anchor="middle" fill="#10B981"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="16" font-weight="700">CPU &#x2022; CoreML</text>
+    <text x="110" y="64" text-anchor="middle" fill="#10B981"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="16" font-weight="700">CUDA &#x2022; DirectML</text>
+    <text x="110" y="92" text-anchor="middle" fill="#E2E8F0"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">iOS &#x2022; Android &#x2022; Web</text>
+    <text x="110" y="110" text-anchor="middle" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="12">no PyTorch required</text>
+  </g>
+
+  <!-- Stats row -->
+  <g transform="translate(120, 430)">
+    <text x="0" y="0" fill="#A855F7"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="42" font-weight="800">7</text>
+    <text x="0" y="28" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">ONNX models</text>
+    <text x="0" y="46" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">on Hugging Face</text>
+  </g>
+
+  <g transform="translate(290, 430)">
+    <text x="0" y="0" fill="#EC4899"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="42" font-weight="800">9.19</text>
+    <text x="0" y="28" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">dB &#x2022; #1 open-source</text>
+    <text x="0" y="46" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">vocal SDR (MUSDB18-HQ)</text>
+  </g>
+
+  <g transform="translate(530, 430)">
+    <text x="0" y="0" fill="#10B981"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="42" font-weight="800">1.31&#x00D7;</text>
+    <text x="0" y="28" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">faster than PyTorch</text>
+    <text x="0" y="46" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">on CPU, M4 Pro</text>
+  </g>
+
+  <g transform="translate(770, 430)">
+    <text x="0" y="0" fill="#FBBF24"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="42" font-weight="800">1.6e-4</text>
+    <text x="0" y="28" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">max abs diff</text>
+    <text x="0" y="46" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">ONNX vs PyTorch fp32</text>
+  </g>
+
+  <!-- StemSplit branding -->
+  <g transform="translate(0, 555)">
+    <rect x="0" y="0" width="1200" height="75" fill="#0F172A" opacity="0.6"/>
+    <text x="600" y="38" text-anchor="middle" fill="#F8FAFC"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="24" font-weight="700">StemSplit</text>
+    <text x="600" y="60" text-anchor="middle" fill="#94A3B8"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="13">stemsplit.io &#x2022; huggingface.co/StemSplitio</text>
+  </g>
+</svg>

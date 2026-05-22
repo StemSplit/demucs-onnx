@@ -1,0 +1,173 @@
+[project]
+name = "demucs-onnx"
+version = "0.3.3"
+description = "Run and export HT-Demucs / Demucs music source separation as ONNX. Pure numpy + onnxruntime inference (no PyTorch). Supports htdemucs_ft (4-stem bag), htdemucs (single-file 4-stem), and htdemucs_6s (6-stem with guitar + piano). Karaoke / acapella CLI, browser-demo scaffolder, auto-resampling, auto execution provider routing, fp16-weight downloads, MP3 output. Fixes the 4 blockers that prevent vanilla torch.onnx.export from working on htdemucs."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "StemSplit", email = "team@stemsplit.io" },
+]
+maintainers = [
+    { name = "StemSplit", email = "team@stemsplit.io" },
+]
+keywords = [
+    "demucs",
+    "htdemucs",
+    "htdemucs_ft",
+    "htdemucs_6s",
+    "htdemucs-6s",
+    "htdemucs-onnx",
+    "onnx",
+    "onnxruntime",
+    "onnxruntime-web",
+    "audio",
+    "music",
+    "audio-ml",
+    "audio-processing",
+    "audio-to-audio",
+    "stem-separation",
+    "stems",
+    "source-separation",
+    "music-source-separation",
+    "vocal-remover",
+    "vocal-removal",
+    "vocal-isolation",
+    "instrumental-extraction",
+    "guitar-isolation",
+    "piano-isolation",
+    "karaoke",
+    "karaoke-maker",
+    "acapella",
+    "acapella-extractor",
+    "demucs-mobile",
+    "demucs-ios",
+    "demucs-android",
+    "demucs-browser",
+    "demucs-onnx-export",
+    "browser-audio",
+    "wasm",
+    "webgpu",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Multimedia :: Sound/Audio :: Conversion",
+    "Topic :: Multimedia :: Sound/Audio :: Editors",
+    "Topic :: Multimedia :: Sound/Audio :: Mixers",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    # Inference path: keep this list small. ONNX Runtime + numpy is enough.
+    "onnxruntime>=1.17",
+    "numpy>=1.24",
+    "soundfile>=0.12",
+    "huggingface-hub>=0.24",
+    # ~3 MB wheel; pulls in libsox via cffi. Auto-resamples non-44.1 kHz
+    # inputs transparently. We use it through a soft import so callers
+    # who really don't want it can uninstall and we fall back to scipy
+    # or a numpy-only resampler.
+    "soxr>=0.3",
+    # tqdm is already a transitive dep via huggingface_hub but we list it
+    # directly so the inference progress bar still works if the user
+    # downgrades hf-hub.
+    "tqdm>=4.65",
+]
+
+[project.optional-dependencies]
+# MP3 output via the LAME encoder. Tiny (~50 KB) pure-wheel; no ffmpeg
+# system dep required.
+mp3 = [
+    "lameenc>=1.6",
+]
+# Export path: needs PyTorch + demucs to actually convert checkpoints.
+# Pinned to the same range that the original parity-verified spike used.
+export = [
+    "torch>=2.4,<2.5",
+    "torchaudio>=2.4,<2.5",
+    "demucs==4.0.1",
+    "onnx>=1.16",
+    "onnxscript>=0.1.0",
+]
+# Convenience: everything end-users would want in one pip install.
+all = [
+    "demucs-onnx[mp3]",
+]
+dev = [
+    "ruff>=0.5",
+    "pytest>=8.0",
+    "lameenc>=1.6",
+]
+
+[project.urls]
+Homepage = "https://stemsplit.github.io/demucs-onnx/"
+Documentation = "https://stemsplit.github.io/demucs-onnx/"
+Repository = "https://github.com/StemSplit/demucs-onnx"
+"Source Code" = "https://github.com/StemSplit/demucs-onnx"
+Changelog = "https://github.com/StemSplit/demucs-onnx/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/StemSplit/demucs-onnx/issues"
+Discussions = "https://github.com/StemSplit/demucs-onnx/discussions"
+"Hugging Face Models" = "https://huggingface.co/StemSplitio"
+"Hosted API" = "https://stemsplit.io/developers"
+"StemSplit App" = "https://stemsplit.io"
+
+[project.scripts]
+demucs-onnx = "demucs_onnx.cli:main"
+
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/demucs_onnx"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/demucs_onnx",
+    "assets",
+    "examples",
+    "docs",
+    "mkdocs.yml",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "pyproject.toml",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "RUF"]
+ignore = [
+    "E501",   # long lines: tolerate in docstrings, the formatter handles real wrapping
+    "B008",   # default args with function calls (Path() is fine in our CLI signatures)
+]
+
+[tool.ruff.format]
+quote-style = "double"

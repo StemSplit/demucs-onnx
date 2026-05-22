@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+.coverage
+.env
+.env.local
+
+# Local test artifacts
+out/
+artifacts/
+*.onnx
+*.wav
+!tests/fixtures/*.wav
+
+# One-off push helpers (kept out of the published package)
+.tmp_*.py
+
+# MkDocs build output
+site/
+_site_test/

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>demucs-onnx browser demo</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; max-width: 720px;
+           margin: 2rem auto; padding: 0 1rem; line-height: 1.5; color: #222; }
+    h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+    .sub { color: #666; margin-bottom: 1.5rem; }
+    fieldset { border: 1px solid #ddd; border-radius: 6px; padding: 1rem 1.25rem; }
+    legend { padding: 0 .5rem; font-weight: 600; }
+    input[type=file] { display: block; margin: .5rem 0; }
+    button { padding: .5rem 1rem; font-size: 1rem; border-radius: 6px;
+             border: 1px solid #444; background: #fafafa; cursor: pointer; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    pre { background: #f4f4f4; padding: .75rem; border-radius: 4px; overflow-x: auto; }
+    .progress { font-family: ui-monospace, monospace; font-size: .9rem; color: #444; }
+    a.dl { display: inline-block; margin-top: .75rem; background: #2563eb; color: #fff;
+           padding: .5rem 1rem; text-decoration: none; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>demucs-onnx — browser vocals demo</h1>
+  <p class="sub">Runs HT-Demucs FT vocals (166&nbsp;MB, fp16weights) entirely in your tab via
+     <code>onnxruntime-web</code>. No upload &mdash; the audio never leaves your machine.</p>
+
+  <fieldset>
+    <legend>1. Pick an audio file</legend>
+    <p>Best results with a stereo 44.1&nbsp;kHz WAV/MP3 between 5 and 30&nbsp;seconds.</p>
+    <input type="file" id="file" accept="audio/*" />
+    <p class="progress" id="status">No file loaded.</p>
+    <button id="run" disabled>Extract vocals</button>
+    <a id="download" class="dl" style="display:none">Download vocals.wav</a>
+  </fieldset>
+
+  <fieldset style="margin-top:1.5rem">
+    <legend>What this does</legend>
+    <ul>
+      <li>Downloads <code>htdemucs_ft_vocals_fp16weights.onnx</code> (~166 MB) from HF on first run.
+          The browser caches it forever.</li>
+      <li>Chunks long inputs into 7.8&nbsp;s segments with 25% overlap and runs them sequentially.</li>
+      <li>Reassembles the vocals stem and produces a 16-bit PCM WAV at the original sample rate.</li>
+      <li>Source: <a href="https://github.com/StemSplit/demucs-onnx/blob/main/examples/browser/index.html">
+          examples/browser/index.html</a> in the demucs-onnx repo.</li>
+    </ul>
+  </fieldset>
+
+  <script type="module" src="./demo.js"></script>
+</body>
+</html>

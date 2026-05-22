@@ -1,0 +1,103 @@
+site_name: demucs-onnx
+site_description: >-
+  Run and export HT-Demucs / Demucs music source separation as ONNX.
+  Pure numpy + onnxruntime inference (no PyTorch). The canonical
+  reference for the four torch.onnx.export blockers on htdemucs.
+site_url: https://stemsplit.github.io/demucs-onnx/
+repo_url: https://github.com/StemSplit/demucs-onnx
+repo_name: StemSplit/demucs-onnx
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.action.edit
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Install: install.md
+  - CLI reference: cli.md
+  - Python API: python-api.md
+  - Browser support: browser.md
+  - Models: models.md
+  - Export your own: export-your-own.md
+  - Comparison: comparison.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            show_source: true
+            show_root_heading: true
+            heading_level: 3
+            docstring_style: google
+            members_order: source
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/StemSplit/demucs-onnx
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/demucs-onnx/
+    - icon: simple/huggingface
+      link: https://huggingface.co/StemSplitio
+  generator: false
+
+copyright: >-
+  &copy; 2026 <a href="https://stemsplit.io">StemSplit</a> — MIT-licensed
