@@ -325,7 +325,8 @@ jobs:
     needs: [attest, publish-pypi]
     if: >-
       ${{
-        github.event_name == 'push'
+        always()
+        && github.event_name == 'push'
         && startsWith(github.ref, 'refs/tags/v')
         && needs.publish-pypi.result == 'success'
         && needs.attest.result == 'success'
